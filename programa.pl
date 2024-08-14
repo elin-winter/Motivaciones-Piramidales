@@ -32,23 +32,11 @@ cantNiveles(Necesidad1, Necesidad2, Cantidad):-
     necesidad(Necesidad2, Nivel2),
     cantSeparacion(Nivel1, Nivel2, Cantidad).
 
-cantSeparacion(Nivel1, Nivel2, Cantidad):-
-    nivelSuperior(Nivel1, Nivel2), 
-    Cantidad is 1.
-
-cantSeparacion(Nivel1, Nivel2, Cantidad):-
-    nivelSuperior(Nivel2, Nivel1), 
-    Cantidad is 1.
-
-cantSeparacion(Nivel1, Nivel2, Cantidad):-
-    nivelSuperior(Nivel1, NivelIntermedio),
-    cantSeparacion(NivelIntermedio, Nivel2, CantidadIntermedio),
-    Cantidad is CantidadIntermedio + 1.
-
-cantSeparacion(Nivel1, Nivel2, Cantidad):-
-    nivelSuperior(Nivel2, NivelIntermedio),
-    cantSeparacion(Nivel1, NivelIntermedio, CantidadIntermedio),
-    Cantidad is CantidadIntermedio + 1.
+cantSeparacion(N, N, 0).
+cantSeparacion(MenorNivel, MayorNivel, Cant):-
+    nivelSuperior(MayorNivel, Intermedio),
+    cantSeparacion(MenorNivel, Intermedio, CantIntermedio),
+    Cant is CantIntermedio + 1.
 
 % ----------------- Punto 3
 
@@ -57,17 +45,22 @@ tieneNecesidad(carla, descanso).
 tieneNecesidad(carla, empleo).
 tieneNecesidad(juan, afecto).
 tieneNecesidad(juan, exito).
+tieneNecesidad(camila, alimentacion).
+tieneNecesidad(camila, descanso).
 tieneNecesidad(roberto, amistad).
-tieneNecesidad(charly, salud).
+tieneNecesidad(manuel, libertad).
+tieneNecesidad(charly, afecto).
 
 % ----------------- Punto 4
-necesidadMayorJerarquia(Persona, NecesidadMayor):-
-    tieneNecesidad(Persona, _),
-    findall(Necesidad, tieneNecesidad(Persona, Necesidad), Necesidades),
-    findall(Cantidad, (member(Necesidad, Necesidades), cantNiveles(Necesidad, _, Cantidad)), Cantidades),
-    max_list(Cantidades, MaxCantidad),
-    member(NecesidadMayor, Necesidades),
-    cantNiveles(NecesidadMayor, _, MaxCantidad).
+
+necesidadMayorJerarquia(Persona, Max):-
+    tieneNecesidad(Persona, Max),
+    not((tieneNecesidad(Persona, Otra), 
+        mayorNivel(Otra, Max))).
+
+mayorNivel(Max,Menor):-
+    cantNiveles(Menor, Max, Cant),
+    Cant > 0.
 
 % ----------------- Punto 5
 completoNivel(Persona, Nivel):-
@@ -75,20 +68,13 @@ completoNivel(Persona, Nivel):-
     Nivel = divino.
 
 completoNivel(Persona, Nivel):-
-    tieneNecesidad(Persona, _),
-    necesidadMenorJerarquia(Persona, NecesidadMenor),
-    necesidad(NecesidadMenor, NivelSuperior),
-    nivelSuperior(NivelSuperior, Nivel).
+    necesidad(_, Nivel),
+    tieneNecesidad(Persona, NMin),
+    necesidad(NMin, NivelMin),
+    not(cantSeparacion(NivelMin, Nivel, _)).
 
-necesidadMenorJerarquia(Persona, NecesidadMenor):-
-    tieneNecesidad(Persona, _),
-    findall(Necesidad, tieneNecesidad(Persona, Necesidad), Necesidades),
-    findall(Cantidad, (member(Necesidad, Necesidades), cantNiveles(Necesidad, _, Cantidad)), Cantidades),
-    min_list(Cantidades, MinCantidad),
-    member(NecesidadMenor, Necesidades),
-    cantNiveles(NecesidadMenor, _, MinCantidad).
-    
 % ----------------- Punto 6
+
 teoriaCiertaParticular(Persona):-
     tieneNecesidad(Persona, Necesidad),
     forall(tieneNecesidad(Persona, OtraNecesidad), mismoNivel(Necesidad, OtraNecesidad)).
